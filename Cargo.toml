@@ -1,0 +1,11 @@
+[package]
+name = "oidc-verifier-rs"
+version = "0.1.0"
+authors = ["Nikita Volobuev <nikitavbv@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+jsonwebkey = { version="0.3.2", features=["jwt-convert"] }
+jsonwebtoken = "7.2.0"
+serde = "1.0.126"
+reqwest = { version="0.11.4", features=["json"] }
