@@ -17,9 +17,10 @@ impl OIDCTokenVerifier {
     }
 
     async fn request_keys(&self) {
-        let resp = reqwest::get(&self.certs_url)
+        let resp: CertsResponse = reqwest::get(&self.certs_url)
             .await
-            .json::<CertsResponse>()
+            .json()
+            .unwrap();
     }
 }
 
