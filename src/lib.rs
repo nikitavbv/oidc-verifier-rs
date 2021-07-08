@@ -6,6 +6,7 @@ mod certs;
 
 pub struct OIDCTokenVerifier {
     certs_url: String,
+    keys: Vec<jsonwebkey::JsonWebKey>,
 }
 
 impl OIDCTokenVerifier {
@@ -16,11 +17,12 @@ impl OIDCTokenVerifier {
         }
     }
 
-    async fn request_keys(&self) {
+    async fn request_keys(&mut self) {
         let resp: CertsResponse = reqwest::get(&self.certs_url)
             .await
             .json()
             .unwrap();
+        self.keys = resp.keys;
     }
 }
 
