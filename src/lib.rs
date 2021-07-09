@@ -5,8 +5,8 @@ use crate::certs::CertsResponse;
 mod certs;
 
 pub struct OIDCTokenVerifier {
-    certs_url: String,
-    keys: Vec<jsonwebkey::JsonWebKey>,
+    pub certs_url: String,
+    pub keys: Vec<jsonwebkey::JsonWebKey>,
 }
 
 impl OIDCTokenVerifier {
