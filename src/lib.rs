@@ -6,6 +6,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 mod certs;
 
+#[derive(Clone)]
 pub struct OIDCTokenVerifier {
     certs_url: String,
     auds: HashSet<String>,
