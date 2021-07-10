@@ -14,9 +14,9 @@ pub struct OIDCTokenVerifier {
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct TokenClaims {
-    aud: Vec<String>,
-    exp: u64,
-    email: String,
+    pub aud: Vec<String>,
+    pub exp: u64,
+    pub email: String,
 }
 
 impl OIDCTokenVerifier {
@@ -73,7 +73,7 @@ impl OIDCTokenVerifier {
         if result.claims.exp < time {
             return None;
         }
-        
+
         Some(result.claims)
     }
 }
