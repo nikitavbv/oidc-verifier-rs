@@ -3,8 +3,14 @@
 use crate::certs::CertsResponse;
 use std::collections::HashSet;
 use std::time::{SystemTime, UNIX_EPOCH};
+use custom_error::custom_error;
 
 mod certs;
+
+custom_error!{pub TokenVerificationError
+    TokenKidNotPresent = "Token kid is not present",
+    FailedToFindKeyById = "Failed to find key by id"
+}
 
 #[derive(Clone)]
 pub struct OIDCTokenVerifier {
@@ -18,6 +24,22 @@ pub struct TokenClaims {
     pub aud: Vec<String>,
     pub exp: u64,
     pub email: String,
+}
+
+pub enum TokenVerificationResult {
+    Ok(TokenClaims),
+    InvalidToken,
+    Error(TokenVerificationError)
+}
+
+impl TokenVerificationResult {
+
+    pub fn is_ok(&self) -> bool {
+        match self {
+            TokenVerificationResult::Ok(_) => true,
+            _ => false
+        }
+    }
 }
 
 impl OIDCTokenVerifier {
@@ -50,7 +72,7 @@ impl OIDCTokenVerifier {
         None
     }
 
-    pub fn verify(&self, token: &str) -> Option<TokenClaims> {
+    pub fn verify(&self, token: &str) -> TokenVerificationResult {
         let validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
         let header = jsonwebtoken::decode_header(&token).expect("failed to decode header");
 
@@ -66,16 +88,16 @@ impl OIDCTokenVerifier {
             .unwrap_or(false);
 
         if !contains_aud {
-            return None;
+            return TokenVerificationResult::InvalidToken;
         }
 
         let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
 
         if result.claims.exp < time {
-            return None;
+            return TokenVerificationResult::InvalidToken;
         }
 
-        Some(result.claims)
+        TokenVerificationResult::Ok(result.claims)
     }
 }
 
@@ -92,6 +114,6 @@ mod tests {
         token_verifier.request_keys().await;
 
         let test_token_str = std::env::var("TEST_TOKEN").expect("Expected TEST_TOKEN to be set");
-        assert!(token_verifier.verify(&test_token_str).is_some());
+        assert!(token_verifier.verify(&test_token_str).is_ok());
     }
 }
