@@ -5,8 +5,8 @@ use crate::certs::CertsResponse;
 mod certs;
 
 pub struct OIDCTokenVerifier {
-    pub certs_url: String,
-    pub keys: Vec<jsonwebkey::JsonWebKey>,
+    certs_url: String,
+    keys: Vec<jsonwebkey::JsonWebKey>,
 }
 
 impl OIDCTokenVerifier {
@@ -14,45 +14,49 @@ impl OIDCTokenVerifier {
     pub fn new(certs_url: &str) -> Self {
         OIDCTokenVerifier {
             certs_url: certs_url.to_string(),
+            keys: Vec::new(),
         }
     }
 
     async fn request_keys(&mut self) {
         let resp: CertsResponse = reqwest::get(&self.certs_url)
             .await
+            .expect("certs request failed")
             .json()
+            .await
             .unwrap();
         self.keys = resp.keys;
+    }
+
+    fn key_by_id(&self, id: &str) -> Option<jsonwebkey::JsonWebKey> {
+        for key in &self.keys {
+            if key.key_id == Some(id.to_string()) {
+                return Some(key.clone());
+            }
+        }
+
+        None
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::OIDCTokenVerifier;
+
     #[derive(serde::Serialize, serde::Deserialize, Debug)]
     struct TokenClaims {}
 
-    #[test]
-    fn request_keys() {
+    #[tokio::test]
+    async fn request_keys() {
+        let mut token_verifier = OIDCTokenVerifier::new("https://api.nikitavbv.com/cdn-cgi/access/certs");
+        token_verifier.request_keys().await;
 
-    }
-
-    #[test]
-    fn decode_jwk() {
-        let jwt_str = r#"{
-"kid": "da8011e89ca97e85e3b2b695187468c520630fbd5c41bcf1399a46055783b052",
-"kty": "RSA",
-"alg": "RS256",
-"use": "sig",
-"e": "AQAB",
-"n": "3s4Gi_ZmDkcX78f-o_tDHp46LU2PyWrh7yBuwNt9nxDzyq3EFX-BpO-iky6DyhSLOCqxRqr-yrqigZ1kLcn9RNEBR6Jl3v_8pP-hpoZRIfzvlu9-tV9pKI83oYHxocKZxbmsarhYMsInUnc11_ec_LyCHsyk-sG4UfAnq0D3SELhrr-xkJpoiO3JMlX4rZNQ_kMVT9waxbQiqQHVTNZ_bkfayLhKF9WgKxd2wSc-ZHbp4khgcFe0MImhtbktkDsghFv7C9d5LBF8zksADExzKQ7BscsmXawXRF6KtiQJMtx2pjuEub9oatRGqaTofxTwpvAq53uJLAVAmOqZ5JSwDw"
-}"#;
-
-        let the_jwk: jsonwebkey::JsonWebKey = jwt_str.parse().unwrap();
-
-        let token_to_decode = "<jwt>";
-
+        let test_token_str = std::env::var("TEST_TOKEN").expect("Expected TEST_TOKEN to be set");
         let validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
-        let result = jsonwebtoken::decode::<TokenClaims>(token_to_decode, &the_jwk.key.to_decoding_key(), &validation)
+
+        let header = jsonwebtoken::decode_header(&test_token_str).expect("failed to decode header");
+
+        let result = jsonwebtoken::decode::<TokenClaims>(&test_token_str, &token_verifier.key_by_id(&header.kid.unwrap()).unwrap().key.to_decoding_key(), &validation)
             .expect("failed to decode");
 
         println!("result: {:?}", result);
