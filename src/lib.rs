@@ -14,7 +14,6 @@ custom_error!{pub TokenVerificationError
 
 #[derive(Clone)]
 pub struct OIDCTokenVerifier {
-    certs_url: String,
     auds: HashSet<String>,
     keys: Vec<jsonwebkey::JsonWebKey>,
 }
@@ -44,22 +43,21 @@ impl TokenVerificationResult {
 
 impl OIDCTokenVerifier {
 
-    pub fn new(certs_url: &str, auds: HashSet<String>) -> Self {
+    pub async fn new(certs_url: &str, auds: HashSet<String>) -> Self {
         OIDCTokenVerifier {
-            certs_url: certs_url.to_string(),
             auds,
-            keys: Vec::new(),
+            keys: Self::request_keys(certs_url).await,
         }
     }
 
-    async fn request_keys(&mut self) {
-        let resp: CertsResponse = reqwest::get(&self.certs_url)
+    async fn request_keys(certs_url: &str) -> Vec<jsonwebkey::JsonWebKey> {
+        reqwest::get(certs_url)
             .await
             .expect("certs request failed")
-            .json()
+            .json::<CertsResponse>()
             .await
-            .unwrap();
-        self.keys = resp.keys;
+            .unwrap()
+            .keys
     }
 
     fn key_by_id(&self, id: &str) -> Option<jsonwebkey::JsonWebKey> {
@@ -107,11 +105,10 @@ mod tests {
 
     #[tokio::test]
     async fn request_keys() {
-        let mut token_verifier = OIDCTokenVerifier::new(
+        let token_verifier = OIDCTokenVerifier::new(
             "https://api.nikitavbv.com/cdn-cgi/access/certs",
             ["dd40dd06f1cc22637a82c6978b379ef5ca838099d8b4bd81f6af3a0bb0642ecc".to_string()].iter().cloned().collect()
-        );
-        token_verifier.request_keys().await;
+        ).await;
 
         let test_token_str = std::env::var("TEST_TOKEN").expect("Expected TEST_TOKEN to be set");
         assert!(token_verifier.verify(&test_token_str).is_ok());
