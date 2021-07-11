@@ -7,6 +7,10 @@ use custom_error::custom_error;
 
 mod certs;
 
+custom_error!{pub TokenVerifierInitError
+    FailedToGetCerts = "Failed to get certs"
+}
+
 custom_error!{pub TokenVerificationError
     TokenKidNotPresent = "Token kid is not present",
     FailedToFindKeyById = "Failed to find key by id"
