@@ -47,21 +47,21 @@ impl TokenVerificationResult {
 
 impl OIDCTokenVerifier {
 
-    pub async fn new(certs_url: &str, auds: HashSet<String>) -> Self {
-        OIDCTokenVerifier {
+    pub async fn new(certs_url: &str, auds: HashSet<String>) -> Result<Self, TokenVerifierInitError> {
+        Ok(OIDCTokenVerifier {
             auds,
-            keys: Self::request_keys(certs_url).await,
-        }
+            keys: Self::request_keys(certs_url).await?,
+        })
     }
 
-    async fn request_keys(certs_url: &str) -> Vec<jsonwebkey::JsonWebKey> {
-        reqwest::get(certs_url)
+    async fn request_keys(certs_url: &str) -> Result<Vec<jsonwebkey::JsonWebKey>, TokenVerifierInitError> {
+        Ok(reqwest::get(certs_url)
             .await
             .expect("certs request failed")
             .json::<CertsResponse>()
             .await
             .unwrap()
-            .keys
+            .keys)
     }
 
     fn key_by_id(&self, id: &str) -> Option<jsonwebkey::JsonWebKey> {
