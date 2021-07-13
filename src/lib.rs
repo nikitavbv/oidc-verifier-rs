@@ -57,7 +57,7 @@ impl OIDCTokenVerifier {
     async fn request_keys(certs_url: &str) -> Result<Vec<jsonwebkey::JsonWebKey>, TokenVerifierInitError> {
         Ok(reqwest::get(certs_url)
             .await
-            .expect("certs request failed")
+            .map_err(|err| TokenVerifierInitError::FailedToGetCerts)?
             .json::<CertsResponse>()
             .await
             .unwrap()
