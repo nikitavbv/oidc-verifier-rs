@@ -8,7 +8,7 @@ use custom_error::custom_error;
 mod certs;
 
 custom_error!{pub TokenVerifierInitError
-    FailedToGetCerts = "Failed to get certs"
+    FailedToGetCerts{reason: String} = "Failed to get certs: {reason}"
 }
 
 custom_error!{pub TokenVerificationError
@@ -57,7 +57,7 @@ impl OIDCTokenVerifier {
     async fn request_keys(certs_url: &str) -> Result<Vec<jsonwebkey::JsonWebKey>, TokenVerifierInitError> {
         Ok(reqwest::get(certs_url)
             .await
-            .map_err(|err| TokenVerifierInitError::FailedToGetCerts)?
+            .map_err(|err| TokenVerifierInitError::FailedToGetCerts { reason: err.to_string() })?
             .json::<CertsResponse>()
             .await
             .unwrap()
