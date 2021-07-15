@@ -60,7 +60,7 @@ impl OIDCTokenVerifier {
             .map_err(|err| TokenVerifierInitError::FailedToGetCerts { reason: err.to_string() })?
             .json::<CertsResponse>()
             .await
-            .unwrap()
+            .map_err(|err| TokenVerifierInitError::FailedToGetCerts { reason: err.to_string()  })?
             .keys)
     }
 
