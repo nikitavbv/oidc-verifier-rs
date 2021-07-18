@@ -79,7 +79,7 @@ impl OIDCTokenVerifier {
         let validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
         let header = match jsonwebtoken::decode_header(&token) {
             Ok(v) => v,
-            Err(err) => return TokenVerificationResult::Error(err),
+            Err(err) => return TokenVerificationResult::Error(TokenVerificationError::FailedToDecodeHeader),
         };
 
         let result = jsonwebtoken::decode::<TokenClaims>(
