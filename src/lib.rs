@@ -13,6 +13,7 @@ custom_error!{pub TokenVerifierInitError
 
 custom_error!{pub TokenVerificationError
     FailedToDecodeHeader = "Failed to decode header",
+    FailedToDecodeBody = "Failed to decode body",
     TokenKidNotPresent = "Token kid is not present",
     FailedToFindKeyById = "Failed to find key by id"
 }
