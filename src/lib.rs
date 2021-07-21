@@ -12,7 +12,7 @@ custom_error!{pub TokenVerifierInitError
 }
 
 custom_error!{pub TokenVerificationError
-    FailedToDecodeHeader = "Failed to decode header",
+    FailedToDecodeHeader{reason: String} = "Failed to decode header",
     FailedToDecodeBody = "Failed to decode body",
     TokenKidNotPresent = "Token kid is not present",
     FailedToFindKeyById = "Failed to find key by id"
@@ -80,7 +80,9 @@ impl OIDCTokenVerifier {
         let validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
         let header = match jsonwebtoken::decode_header(&token) {
             Ok(v) => v,
-            Err(err) => return TokenVerificationResult::Error(TokenVerificationError::FailedToDecodeHeader),
+            Err(err) => return TokenVerificationResult::Error(TokenVerificationError::FailedToDecodeHeader { 
+                reason: err.to_string()  
+            }),
         };
 
         let result = jsonwebtoken::decode::<TokenClaims>(
