@@ -13,6 +13,7 @@ custom_error!{pub TokenVerifierInitError
 
 custom_error!{pub TokenVerificationError
     FailedToDecodeHeader{reason: String} = "Failed to decode header",
+    FailedToDecodeTokenClaims{reason: String} = "Failed to decode token claims: {reason}",
     FailedToDecodeBody = "Failed to decode body",
     TokenKidNotPresent = "Token kid is not present",
     FailedToFindKeyById = "Failed to find key by id"
@@ -85,11 +86,16 @@ impl OIDCTokenVerifier {
             }),
         };
 
-        let result = jsonwebtoken::decode::<TokenClaims>(
+        let result = match jsonwebtoken::decode::<TokenClaims>(
             &token,
             &self.key_by_id(&header.kid.unwrap()).unwrap().key.to_decoding_key(),
             &validation
-        ).expect("failed to decode");
+        ) {
+            Ok(v) => v,
+            Err(err) => return TokenVerificationResult::Error(TokenVerificationError::FailedToDecodeTokenClaims {
+                reason: err.to_string()
+            })
+        };
 
         let contains_aud = result.claims.aud.iter()
             .map(|v| self.auds.contains(v))
