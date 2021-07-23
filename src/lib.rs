@@ -14,6 +14,7 @@ custom_error!{pub TokenVerifierInitError
 custom_error!{pub TokenVerificationError
     FailedToDecodeHeader{reason: String} = "Failed to decode header",
     FailedToDecodeTokenClaims{reason: String} = "Failed to decode token claims: {reason}",
+    AudIsNotPresent = "Aud is not present",
     FailedToDecodeBody = "Failed to decode body",
     TokenKidNotPresent = "Token kid is not present",
     FailedToFindKeyById = "Failed to find key by id"
