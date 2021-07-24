@@ -87,9 +87,16 @@ impl OIDCTokenVerifier {
             }),
         };
 
+        let kid = match header.kid {
+            Some(v) => v,
+            None => return TokenVerificationResult::Error(TokenVerificationError::FailedToDecodeHeader {
+                reason: "Header does not have kid set".to_string(),
+            }),
+        };
+
         let result = match jsonwebtoken::decode::<TokenClaims>(
             &token,
-            &self.key_by_id(&header.kid.unwrap()).unwrap().key.to_decoding_key(),
+            &self.key_by_id(&kid).unwrap().key.to_decoding_key(),
             &validation
         ) {
             Ok(v) => v,
