@@ -94,9 +94,16 @@ impl OIDCTokenVerifier {
             }),
         };
 
+        let key = match self.key_by_id(&kid) {
+            Some(v) => v,
+            None => return TokenVerificationResult::Error(TokenVerificationError::FailedToDecodeHeader {
+                reason: "Failed to find key by id".to_string(),
+            }),
+        };
+
         let result = match jsonwebtoken::decode::<TokenClaims>(
             &token,
-            &self.key_by_id(&kid).unwrap().key.to_decoding_key(),
+            &key.key.to_decoding_key(),
             &validation
         ) {
             Ok(v) => v,
