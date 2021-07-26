@@ -17,7 +17,8 @@ custom_error!{pub TokenVerificationError
     AudIsNotPresent = "Aud is not present",
     FailedToDecodeBody = "Failed to decode body",
     TokenKidNotPresent = "Token kid is not present",
-    FailedToFindKeyById = "Failed to find key by id"
+    FailedToFindKeyById = "Failed to find key by id",
+    FailedToVerifyExpiration = "Failed to verify expiration"
 }
 
 #[derive(Clone)]
