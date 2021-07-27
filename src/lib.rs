@@ -122,7 +122,10 @@ impl OIDCTokenVerifier {
             return TokenVerificationResult::InvalidToken;
         }
 
-        let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let time = match SystemTime::now().duration_since(UNIX_EPOCH) {
+            Ok(v) => v.as_secs(),
+            Err(_) => return TokenVerificationResult::Error(TokenVerificationError::FailedToVerifyExpiration)
+        };
 
         if result.claims.exp < time {
             return TokenVerificationResult::InvalidToken;
