@@ -1,3 +1,3 @@
-# oidc-verifier-rs (WIP)
+# oidc-verifier-rs
 
 Token verifier for OIDC. Can be useful if your endpoints are protected by something like [Cloudflare Access](https://www.cloudflare.com/teams/access/).
